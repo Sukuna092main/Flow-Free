@@ -1,23 +1,29 @@
 class Board:
     def __init__(self, grid):
-        self.grid = grid
-        self.n = len(grid)
+        self.grid = [row[:] for row in grid]
+        self.n = len(self.grid)
+        self.pairs = {}
+        self.endpoints = set()
+        self.rebuild_metadata()
+
+    def rebuild_metadata(self):
         self.pairs = {}
         self.endpoints = set()
 
         for r in range(self.n):
             for c in range(self.n):
+                color = self.grid[r][c]
 
-                color = grid[r][c]
-
-                if color != '.':
-
-                    self.endpoints.add((r,c))
+                if color != ".":
+                    self.endpoints.add((r, c))
 
                     if color not in self.pairs:
-                        self.pairs[color] = [(r,c)]
+                        self.pairs[color] = [(r, c)]
                     else:
-                        self.pairs[color].append((r,c))
+                        self.pairs[color].append((r, c))
+
+    def copy_grid(self):
+        return [row[:] for row in self.grid]
 
     def is_valid(self, r, c, color):
         if not (0 <= r < self.n and 0 <= c < self.n):
