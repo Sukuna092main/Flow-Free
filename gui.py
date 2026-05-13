@@ -1,8 +1,9 @@
 import colorsys
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 
 from board import Board
+from puzzles import get_puzzle, get_puzzle_names, load_puzzle, save_puzzle
 from sat_solver import SATSolver
 from solve import Solver
 
@@ -53,6 +54,41 @@ class FlowGUI:
             command=self.clear_board,
         )
         self.clear_button.pack(side="left")
+
+        self.controls2 = tk.Frame(root)
+        self.controls2.pack(padx=12, pady=(0, 4), fill="x")
+
+        self.puzzle_label = tk.Label(self.controls2, text="Puzzle:")
+        self.puzzle_label.pack(side="left")
+
+        self.puzzle_var = tk.StringVar(root)
+        puzzle_names = get_puzzle_names()
+        if puzzle_names:
+            self.puzzle_var.set(puzzle_names[0])
+        self.puzzle_menu = tk.OptionMenu(self.controls2, self.puzzle_var, *puzzle_names)
+        self.puzzle_menu.pack(side="left", padx=(4, 6))
+
+        self.load_puzzle_button = tk.Button(
+            self.controls2,
+            text="Load Puzzle",
+            command=self.load_sample_puzzle,
+        )
+        self.load_puzzle_button.pack(side="left")
+
+        self.save_file_button = tk.Button(
+            self.controls2,
+            text="Save File",
+            command=self.save_to_file,
+        )
+        self.save_file_button.pack(side="left", padx=(6, 0))
+
+        self.load_file_button = tk.Button(
+            self.controls2,
+            text="Load File",
+            command=self.load_from_file,
+        )
+        self.load_file_button.pack(side="left", padx=6)
+
 
         self.help_label = tk.Label(
             root,
@@ -133,6 +169,55 @@ class FlowGUI:
     def clear_board(self):
         self.edit_grid = [["." for _ in range(self.size)] for _ in range(self.size)]
         self.sync_board()
+
+    def load_sample_puzzle(self):
+        name = self.puzzle_var.get()
+        grid = get_puzzle(name)
+
+        if grid is None:
+            messagebox.showwarning("Puzzle", f"Không tìm thấy puzzle '{name}'.")
+            return
+
+        self.resize_board(grid)
+
+    def save_to_file(self):
+        filepath = filedialog.asksaveasfilename(
+            title="Lưu puzzle",
+            defaultextension=".txt",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        )
+
+        if not filepath:
+            return
+
+        save_puzzle(filepath, self.edit_grid)
+        messagebox.showinfo("Save", f"Đã lưu puzzle tại:\n{filepath}")
+
+    def load_from_file(self):
+        filepath = filedialog.askopenfilename(
+            title="Mở puzzle",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        )
+
+        if not filepath:
+            return
+
+        try:
+            grid = load_puzzle(filepath)
+        except Exception as e:
+            messagebox.showerror("Load", f"Không thể đọc file:\n{e}")
+            return
+
+        self.resize_board(grid)
+
+    def resize_board(self, grid):
+        new_size = len(grid)
+        self.size = new_size
+        self.edit_grid = [row[:] for row in grid]
+        self.board = Board(self.edit_grid)
+        self.solution_segments = {}
+        self.color_map = self.build_color_map()
+        self.draw_board()
 
     def sync_board(self):
         self.board = Board(self.copy_grid(self.edit_grid))

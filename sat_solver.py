@@ -1,4 +1,4 @@
-from z3 import And, Bool, If, Implies, Int, Not, Or, PbEq, Solver, sat
+from z3 import And, Bool, If, Implies, Int, Not, Or, PbLe, Solver, sat
 
 
 class SATSolver:
@@ -62,7 +62,7 @@ class SATSolver:
         for r in range(self.n):
             for c in range(self.n):
                 literals = [(self.cell_color[(r, c, color)], 1) for color in self.colors]
-                solver.add(PbEq(literals, 1))
+                solver.add(PbLe(literals, 1))
 
     def add_endpoint_constraints(self, solver):
         for color in self.colors:

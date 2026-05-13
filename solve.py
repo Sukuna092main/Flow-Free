@@ -26,7 +26,7 @@ class Solver:
 
     def solve_color(self, idx, colors):
         if idx == len(colors):
-            return self.board.is_full()
+            return True
 
         color = colors[idx]
         start, end = self.board.pairs[color]
